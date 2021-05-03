@@ -1,0 +1,1 @@
+export const EXPIRATION_DELTA = "expirationDelta" as const;
