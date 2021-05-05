@@ -1,5 +1,5 @@
-<p align="center" style="background: black">
-  <a href="https://devxsolution.com/" target="blank" ><img src="https://devxsolution.com/wp-content/uploads/2021/04/Devxsolution-logo-2021-1.png" width="320" alt="Dxs Logo" /></a>
+<p align="center" style="background-color: #000000;">
+  <a href="https://devxsolution.com/" target="blank" ><img src="https://scontent.fjdo1-1.fna.fbcdn.net/v/t1.6435-9/180900085_300471624999950_573693597891277187_n.png?_nc_cat=104&ccb=1-3&_nc_sid=09cbfe&_nc_ohc=fxCbLZRnssMAX9H6nRH&_nc_ht=scontent.fjdo1-1.fna&oh=7eb2764d7d5e0904b9b62dde2fed008e&oe=60B897DB" width="320" alt="Dxs Logo" /></a>
 </p>
 
 ## Description
