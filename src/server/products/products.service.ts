@@ -11,8 +11,12 @@ export class ProductsService {
     return await this.prismaService.product.create({ data });
   }
 
-  async findAll(userId: number) {
+  async findAllByUser(userId: number) {
     return await this.prismaService.product.findMany({ where: { userId } });
+  }
+
+  async findAll() {
+    return await this.prismaService.product.findMany();
   }
 
   async findOne(id: number, userId: number) {

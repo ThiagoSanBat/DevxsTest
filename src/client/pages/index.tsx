@@ -61,7 +61,7 @@ const ModalEmailNotification: NextComponentType<
                   className="text-lg leading-6 font-medium text-gray-900"
                   id="modal-title"
                 >
-                  Dexs E-commercer
+                  Devxs E-commercer
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500">
@@ -93,7 +93,7 @@ const Login: NextPage = () => {
 
   const [isSignIn, seIsSignIn] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [_, setAccessToken] = useUser({
+  const [token, setAccessToken] = useUser({
     redirectIfFound: true,
     redirectTo: '/product',
   });

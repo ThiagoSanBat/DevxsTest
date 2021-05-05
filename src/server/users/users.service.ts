@@ -3,8 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { deCrypt, encrypt } from '../auth/crypt-util';
 import { UserNotFoundException } from '../exceptions';
 import { PrismaService } from '../prisma.service';
-import { Prisma, User } from '.prisma/client';
-import { UniqueKey } from '@prisma/client';
+import { Prisma, User } from 'prisma/prisma-client';
 import { EmailService } from '../email/email.service';
 
 @Injectable()
@@ -21,6 +20,7 @@ export class UsersService {
         name: data.name,
         email: data.email,
         password: cryptPassword,
+        role: data.role || 'GUEST',
         uniqueKeys: { create: {} },
       },
       include: {
@@ -70,7 +70,8 @@ export class UsersService {
       where: { id },
       data: {
         name: updateUserDto.name,
-        verified: updateUserDto.verified,
+        email: updateUserDto.email,
+        role: updateUserDto.role,
       },
     });
   }
@@ -87,7 +88,18 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} user`;
+    const unique = await this.prisma.uniqueKey.findFirst({
+      where: { userId: id },
+    });
+    await this.prisma.uniqueKey.delete({
+      where: { id: unique.id },
+    });
+    await this.prisma.product.deleteMany({
+      where: { userId: id },
+    });
+    return this.prisma.user.delete({
+      where: { id },
+    });
   }
 
   async uniqueKeyActive(id: number) {

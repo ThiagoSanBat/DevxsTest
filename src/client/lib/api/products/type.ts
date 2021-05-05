@@ -5,3 +5,11 @@ export type Product = {
   price?: number;
   images?: { id: number }[];
 };
+
+export type User = {
+  id?: number;
+  email?: string;
+  role?: string;
+  name?: string;
+  password?: string;
+};

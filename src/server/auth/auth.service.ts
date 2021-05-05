@@ -16,6 +16,10 @@ export class AuthService {
     return await this.userService.findByEmailAndPassword(email, password);
   }
 
+  async validateUserByEmail(email: string) {
+    return await this.userService.findByEmail(email);
+  }
+
   async login(userLogin: LoginUserDto) {
     const user = await this.validateUser(userLogin.email, userLogin.password);
 
@@ -25,6 +29,7 @@ export class AuthService {
           id: user.id,
           email: user.email,
           name: user.name,
+          role: user.role,
         });
       }
       throw new UserNotVerifiedException('User not verified');
@@ -33,15 +38,22 @@ export class AuthService {
   }
 
   async decode(auth: string) {
-    const jwt = auth.replace('Bearer ', '');
-    const tokenDecoded = this.jwtService.decode(jwt, {
-      json: true,
-    }) as LoggedUser;
-    const loggedUser = new LoggedUser();
-    return Object.assign(loggedUser, {
-      email: tokenDecoded.email,
-      name: tokenDecoded.name,
-      id: tokenDecoded.id,
-    });
+    if (auth) {
+      const jwt = auth.replace('Bearer ', '');
+      const tokenDecoded = this.jwtService.decode(jwt, {
+        json: true,
+      }) as LoggedUser;
+      const loggedUser = new LoggedUser();
+      return Object.assign(loggedUser, {
+        email: tokenDecoded.email,
+        name: tokenDecoded.name,
+        id: tokenDecoded.id,
+      });
+    }
+    return null;
+  }
+
+  verify(token: string) {
+    return this.jwtService.verify(token);
   }
 }

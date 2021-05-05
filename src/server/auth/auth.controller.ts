@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  Param,
   Post,
   Req,
   Res,
@@ -32,14 +33,11 @@ export class AuthController {
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async login(
-    @Req() req: Request,
     @Body() login: LoginUserDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     try {
       const accessToken = await this.authService.login(login);
-      req.session.set('token', accessToken);
-      await req.session.save();
       res.status(HttpStatus.OK);
       return { accessToken };
     } catch (e) {
@@ -53,10 +51,7 @@ export class AuthController {
 
   @Post('signout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Req() req: Request) {
-    req.session.unset('token');
-    await req.session.save();
-  }
+  async logout(@Req() req: Request) {}
 
   @Post('signup')
   async signup(@Body() createUserDto: CreateUserDto) {

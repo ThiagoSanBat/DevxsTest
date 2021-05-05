@@ -1,26 +1,31 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { User } from '.prisma/client';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ImagesModule } from './images/images.module';
-import { UsersModule } from './users/users.module';
-import { ProductsModule } from './products/products.module';
-import { ViewModule } from './view/view.module';
-import { ParameterModule } from './parameter/parameter.module';
-import { UniqueKeysModule } from './unique-keys/unique-keys.module';
-import { AuthModule } from './auth/auth.module';
-import { AuthMiddleware } from './auth/auth.middleware';
-import { UsersController } from './users/users.controller';
-import { ProductsController } from './products/products.controller';
-import { ImagesController } from './images/images.controller';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { MorganInterceptor, MorganModule } from 'nest-morgan';
 import { ironSession } from 'next-iron-session';
-import { AuthController } from './auth/auth.controller';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MorganModule, MorganInterceptor } from 'nest-morgan';
-import { PrismaService } from './prisma.service';
+import { join } from 'path';
+
+import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
+import { ImagesModule } from './images/images.module';
+import { ParameterModule } from './parameter/parameter.module';
+import { RolesGuard } from './permissions/permissions.guard';
+import { PrismaService } from './prisma.service';
+import { ProductsModule } from './products/products.module';
+import { UniqueKeysModule } from './unique-keys/unique-keys.module';
+import { UsersModule } from './users/users.module';
+import { ViewMiddleware } from './view/view.middleware';
+import { ViewModule } from './view/view.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), process.env.STATIC_FOLDER),
+      serveRoot: '/public',
+    }),
     MorganModule,
     ImagesModule,
     EmailModule,
@@ -36,6 +41,10 @@ import { EmailModule } from './email/email.module';
       provide: APP_INTERCEPTOR,
       useClass: MorganInterceptor('combined'),
     },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
     PrismaService,
   ],
 })
@@ -50,15 +59,9 @@ export class AppModule {
       },
     });
 
-    consumer
-      .apply(session)
-      .forRoutes(
-        AuthController,
-        UsersController,
-        ProductsController,
-        ImagesController,
-      )
-      .apply(AuthMiddleware)
-      .forRoutes(UsersController, ProductsController, ImagesController);
+    consumer.apply(ViewMiddleware).forRoutes({
+      path: '/**',
+      method: RequestMethod.ALL,
+    });
   }
 }

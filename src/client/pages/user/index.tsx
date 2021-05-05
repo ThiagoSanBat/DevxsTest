@@ -2,7 +2,7 @@ import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios, { AxiosResponse } from 'axios';
 import Router from 'next/router';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   UseMutateAsyncFunction,
   useMutation,
@@ -12,30 +12,21 @@ import {
 import { Column, useTable } from 'react-table';
 
 import Layout from '../../components/layout';
-import { Product } from '../../lib/api/products/type';
+import { User } from '../../lib/api/products/type';
 import { AuthContext, SubscriptionLevelEnum } from '../../lib/token';
 
-const columns: Column<Product>[] = [
+const columns: Column<User>[] = [
   {
     Header: 'Name',
     accessor: 'name',
   },
   {
-    Header: 'Price',
-    accessor: 'price',
-    Cell: (props) => (
-      <div>
-        {' '}
-        {new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(props.value)}{' '}
-      </div>
-    ),
+    Header: 'Email',
+    accessor: 'email',
   },
   {
-    Header: 'Description',
-    accessor: 'description',
+    Header: 'Role',
+    accessor: 'role',
   },
 ];
 
@@ -49,22 +40,19 @@ const Action: React.FC<{
   >;
 }> = ({ id, deleteHandler }) => {
   const { userAuthenticated } = useContext(AuthContext);
+
   return (
     <>
       <td className="flex float-right border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-right">
-        {userAuthenticated &&
-          userAuthenticated.role === SubscriptionLevelEnum.Admin && (
-            <a className="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700 cursor-pointer">
-              <FontAwesomeIcon
-                icon={faTrash}
-                onClick={() => deleteHandler(id)}
-              />
-            </a>
-          )}
+        {userAuthenticated.id !== id && (
+          <a className="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700 cursor-pointer">
+            <FontAwesomeIcon icon={faTrash} onClick={() => deleteHandler(id)} />
+          </a>
+        )}
         <a className="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700 cursor-pointer">
           <FontAwesomeIcon
             icon={faPen}
-            onClick={() => Router.push(`/product/edit?id=${id}`)}
+            onClick={() => Router.push(`/user/edit?id=${id}`)}
           />
         </a>
       </td>
@@ -72,22 +60,22 @@ const Action: React.FC<{
   );
 };
 
-const ProductTable: React.FC<{
-  products: Product[];
-  deleteProduct: UseMutateAsyncFunction<
+const UserTable: React.FC<{
+  users: User[];
+  deleteUser: UseMutateAsyncFunction<
     AxiosResponse<any>,
     unknown,
     number,
     unknown
   >;
-}> = ({ products, deleteProduct }) => {
+}> = ({ users, deleteUser }) => {
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({ columns, data: products });
+  } = useTable({ columns, data: users });
 
   return (
     <table
@@ -122,7 +110,7 @@ const ProductTable: React.FC<{
                   {cell.render('Cell')}
                 </td>
               ))}
-              <Action deleteHandler={deleteProduct} id={row.original.id} />
+              <Action deleteHandler={deleteUser} id={row.original.id} />
             </tr>
           );
         })}
@@ -132,8 +120,8 @@ const ProductTable: React.FC<{
 };
 
 const ProductList = () => {
-  const { data: products, isLoading, error } = useQuery('productsData', () =>
-    axios.get<Product[]>('/products').then((res) => res.data),
+  const { data: users, isLoading, error } = useQuery('usersData', () =>
+    axios.get<User[]>('/users').then((res) => res.data),
   );
 
   const { userAuthenticated } = useContext(AuthContext);
@@ -141,11 +129,21 @@ const ProductList = () => {
   const queryClient = useQueryClient();
 
   const { mutateAsync } = useMutation(
-    (id: number) => axios.delete(`products/${id}`),
+    (id: number) => axios.delete(`users/${id}`),
     {
-      onSuccess: () => queryClient.invalidateQueries('productsData'),
+      onSuccess: () => queryClient.invalidateQueries('usersData'),
     },
   );
+
+  useEffect(() => {
+    if (
+      !userAuthenticated ||
+      (userAuthenticated &&
+        userAuthenticated.role !== SubscriptionLevelEnum.Admin)
+    ) {
+      Router.push('/product');
+    }
+  }, []);
 
   return (
     <Layout>
@@ -155,17 +153,15 @@ const ProductList = () => {
             <div className="flex flex-wrap items-center">
               <div className="relative flex w-full px-4 max-w-full flex-grow flex-1 justify-between">
                 <h3 className="font-semibold text-lg text-blueGray-700">
-                  Products
+                  Users
                 </h3>
-                {userAuthenticated &&
-                  userAuthenticated.role === SubscriptionLevelEnum.Admin && (
-                    <button
-                      className="bg-indigo-500 text-white font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
-                      onClick={() => Router.push('/product/edit')}
-                    >
-                      Add
-                    </button>
-                  )}
+
+                <button
+                  className="bg-indigo-500 text-white font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 ease-linear transition-all duration-150"
+                  onClick={() => Router.push('/user/edit')}
+                >
+                  Add
+                </button>
               </div>
             </div>
           </div>
@@ -175,7 +171,7 @@ const ProductList = () => {
             ) : error ? (
               'error'
             ) : (
-              <ProductTable products={products} deleteProduct={mutateAsync} />
+              <UserTable users={users} deleteUser={mutateAsync} />
             )}
           </div>
         </div>

@@ -1,21 +1,25 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
   Logger,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
+import { ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
+
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+import { checkIsAdmin, Roles } from '../permissions/permissions.decorator';
+import { Role } from '../permissions/permissions.enum';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Principal } from '../auth/user.decorator';
-import { LoggedUser } from '../auth/dto/logged-user.dto';
+import { ProductsService } from './products.service';
 
 @ApiTags('products')
 @Controller('products')
@@ -26,10 +30,10 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  create(
-    @Principal() user: LoggedUser,
-    @Body() createProductDto: CreateProductDto,
-  ) {
+  //@Roles(Role.Admin)
+  create(@Req() request: Request, @Body() createProductDto: CreateProductDto) {
+    const user = request.user;
+    checkIsAdmin(user);
     this.logger.log(
       `criando ${createProductDto.name} para o userId:${user.id}`,
     );
@@ -43,26 +47,36 @@ export class ProductsController {
   }
 
   @Get()
-  findAll(@Principal() user: LoggedUser) {
-    return this.productsService.findAll(user.id);
+  findAll(@Req() request: Request) {
+    const user = request.user;
+    return user.role === Role.Guest
+      ? this.productsService.findAll()
+      : this.productsService.findAllByUser(user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Principal() user: LoggedUser) {
+  findOne(@Param('id') id: string, @Req() request: Request) {
+    const user = request.user;
     return this.productsService.findOne(+id, user.id);
   }
 
   @Patch(':id')
+  //@Roles(Role.Admin)
   update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @Principal() user: LoggedUser,
+    @Req() request: Request,
   ) {
+    const user = request.user;
+    checkIsAdmin(user);
     return this.productsService.update(+id, updateProductDto, user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Principal() user: LoggedUser) {
+  //@Roles(Role.Admin)
+  remove(@Param('id') id: string, @Req() request: Request) {
+    const user = request.user;
+    checkIsAdmin(user);
     return this.productsService.remove(+id, user.id);
   }
 }

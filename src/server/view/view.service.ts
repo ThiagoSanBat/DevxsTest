@@ -1,21 +1,29 @@
-import { OnModuleInit } from "@nestjs/common";
-import next, { NextServer } from "next/dist/server/next";
+import { OnModuleInit } from '@nestjs/common';
+import next, { NextServer } from 'next/dist/server/next';
+import { AuthService } from '../auth/auth.service';
 
 export class ViewService implements OnModuleInit {
-    private server: NextServer;
+  constructor(private readonly authService: AuthService) {}
 
-    async onModuleInit() {
-        try {
-            this.server = next({dev: true, dir: './src/client'});
-            await this.server.prepare();
-        } catch (error) {
-            console.log(error);
-        }
-    }
+  private server: NextServer;
 
-    
-    public get nextServer() : NextServer {
-        return this.server;
+  async onModuleInit() {
+    try {
+      this.server = next({
+        dev: process.env.NODE_ENV !== 'production',
+        dir: './src/client',
+      });
+      await this.server.prepare();
+    } catch (error) {
+      console.log(error);
     }
-    
+  }
+
+  public verifyToken(token: string) {
+    return this.authService.verify(token);
+  }
+
+  public get nextServer(): NextServer {
+    return this.server;
+  }
 }
