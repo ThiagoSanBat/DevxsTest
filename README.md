@@ -21,7 +21,7 @@ Create a .env file on the root directory of this project with the following cont
 ```bash
 DATABASE_URL=postgresql://admin:admin@localhost:5432/dexstest?schema=ecommerce
 EMAIL=noreplydevxs@gmail.com
-EMAIL_PASSWORD=Devx#test123
+EMAIL_PASSWORD=
 EMAIL_VERIFY_SUBJECT=Devx E-Commerce - E-mail Validation
 URL_EMAIL_VERIFY=http://localhost:3000/auth/checked
 EMAIL_FROM='"Devxs Test" <devxs@devxs.com>'
